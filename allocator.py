@@ -28,7 +28,7 @@ logging.basicConfig(filename="inform.log", level=logging.INFO)
 
 
 @bot.message_handler(commands=['help'])
-def help(message):
+def helps(message):
     bot.send_message(message.chat.id, "/statistic 💯 Узнать, сколько Вы тратили в разных сферах\n"
                                       "/registration 🛂  Зарегистрироваться в систему (ФИ, наличность)\n"
                                       "/profile 👦 Профиль пользователя\n"
@@ -306,18 +306,23 @@ def change_data_in_profile_bot(message):
 
 
 def start_vk_session():
-    vk_session = vk_api.VkApi(token=ACCESS_TOKEN_VK)
-    vk = vk_session.get_api()
+    try:
+        vk_session = vk_api.VkApi(token=ACCESS_TOKEN_VK)
+        vk = vk_session.get_api()
+    except vk_api.ApiError as e:
+        logging.error('Что-то странное случилось!')
+        vk = None
     return vk
 
 
 def get_data(count_vk, group_id):
     vk = start_vk_session()
     response = []
-    try:
-        response = vk.wall.get(owner_id='-' + str(group_id), count=count_vk)
-    except vk_api.ApiError:
-        logging.warning('Закрыттая группа')
+    if vk:
+        try:
+            response = vk.wall.get(owner_id='-' + str(group_id), count=count_vk)
+        except vk_api.ApiError:
+            logging.warning('Закрытая группа')
 
     return response
 
@@ -574,7 +579,7 @@ def allocation_commands(message):
     elif message.text == 'VK':
         get_info(message)
     elif message.text == '🆘':
-        help(message)
+        helps(message)
     elif message.text == '+/-':
         get_operation(message)
     elif message.text == 'Группы':
